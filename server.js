@@ -15,7 +15,7 @@ const app =  express();
 const port = process.env.PORT || 4000
 connectDb();
 
-const allowedOrigins = ['http://localhost:8080']
+const allowedOrigins = ['https://dynamic-ecom-vibe.vercel.app']
 
 app.use(express.json());
 app.use(express.urlencoded({extended:false}))
