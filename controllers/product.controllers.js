@@ -152,38 +152,71 @@ export const getAllProducts = async (req, res) => {
 };
 
 export const updateProduct = async (req, res) => {
-  const { id } = req.params;
-  const { name, description, price, stock, category } = req.body;
-  const images = req.files ? req.files : [];
-
   try {
+    const { id } = req.params;
+    const { name, description, price, stock, category, imageUrl } = req.body;
+    const userId = req.userId;
+
     // Find the product by its ID
     const product = await Product.findById(id);
     if (!product) {
-      return res.json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    // Update product details
+    // Check if user owns this product (if you have authorization)
+    // if (product.createdBy.toString() !== userId) {
+    //   return res.status(403).json({ success: false, message: "Not authorized to edit this product" });
+    // }
+
+    // Update basic product details
     product.name = name || product.name;
     product.description = description || product.description;
-    product.price = price || product.price;
-    product.stock = stock || product.stock;
+    product.price = price ? Number(price) : product.price;
+    product.stock = stock !== undefined ? Number(stock) : product.stock;
     product.category = category || product.category;
 
-    // Handle image upload using Cloudinary (if a new image is uploaded)
-    if (images.length > 0) {
-      const uploadedImage = await cloudinary.v2.uploader.upload(images[0].path);
-      product.images = [uploadedImage.secure_url]; // Set new image URL
+    // Handle image update (same logic as addProduct)
+    let productImage = null;
+
+    // Case 1: Local file upload
+    if (req.file) {
+      // Upload the file to Cloudinary
+      const uploadResult = await cloudinary.v2.uploader.upload(req.file.path);
+      productImage = uploadResult.secure_url;
+    } 
+    // Case 2: Provided image URL
+    else if (imageUrl && imageUrl.trim() !== '') {
+      try {
+        // Let Cloudinary fetch and store it
+        const uploadResult = await cloudinary.v2.uploader.upload(imageUrl);
+        productImage = uploadResult.secure_url;
+      } catch (err) {
+        return res.status(400).json({ success: false, message: "Invalid image URL or failed to upload image" });
+      }
+    }
+
+    // Update image fields if new image provided
+    if (productImage) {
+      product.image = productImage; // Keep for backward compatibility
+      product.images = [{ url: productImage }]; // Update images array for frontend
     }
 
     // Save updated product
-    await product.save();
+    const savedProduct = await product.save();
+
     res.json({
       success: true,
       message: "Product updated successfully",
-      product,
+      product: savedProduct,
     });
+
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    console.error("Update product error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update product",
+      error: error.message,
+    });
   }
 };
+
