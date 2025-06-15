@@ -9,7 +9,7 @@ import Product from "../models/product.models.js";
 dotenv.config();
 
 export const registerUser = async (req, res) => {
-  const { name, email, password,role } = req.body;
+  const { name, email, password, role } = req.body;
 
   if (!name || !email || !password) {
     return res.json({ success: false, message: "Please fill all the fields" });
@@ -30,11 +30,13 @@ export const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || 'user',
+      role: role || "user",
     });
 
-    if (role === 'admin') {
-      return res.status(403).json({ success: false, message: "Cannot assign admin role" });
+    if (role === "admin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Cannot assign admin role" });
     }
     console.log(password);
 
@@ -95,8 +97,8 @@ export const loginUser = async (req, res) => {
     res
       .cookie("token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        secure: true, // Always true for HTTPS
+        sameSite: "none", // Required for cross-origin cookies
         maxAge: 1 * 24 * 60 * 60 * 1000,
       })
       .json({
@@ -209,7 +211,7 @@ export const verifyEmail = async (req, res) => {
     }
 
     if (user.verifyOTP === "" || user.verifyOTP !== otp) {
-     return res.json({ success: false, message: "Invalid OTP" });
+      return res.json({ success: false, message: "Invalid OTP" });
     }
 
     if (user.verifyOtpExpireAt < Date.now()) {
