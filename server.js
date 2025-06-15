@@ -12,7 +12,7 @@ import { wishlistRouter } from './routes/wishlist.route.js';
 
 
 const app =  express();
-const port = process.env.PORT
+const port = process.env.PORT || 4000;
 connectDb();
 
 const allowedOrigins = ['https://dynamic-ecom-vibe.vercel.app']
