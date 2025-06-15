@@ -36,14 +36,15 @@ export const addProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: "Please provide an image file or image URL" });
     }
 
-    // Save new product
+    // Save new product - POPULATE BOTH image AND images fields
     const productData = {
       name: name.trim(),
       price: Number(price),
       description: description.trim(),
       category: category.trim(),
       stock: Number(stock),
-      image: productImage,
+      image: productImage, // Keep for backward compatibility
+      images: [{ url: productImage }], // Add to images array for frontend
       createdBy: userId,
     };
 
@@ -64,6 +65,7 @@ export const addProduct = async (req, res) => {
     });
   }
 };
+
 
 export const getProducts = async (req, res) => {
   try {
